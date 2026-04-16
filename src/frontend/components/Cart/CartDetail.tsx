@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRouter } from 'next/router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import CartItems from '../CartItems';
 import CheckoutForm from '../CheckoutForm';
 import { IFormData } from '../CheckoutForm/CheckoutForm';
@@ -21,6 +21,7 @@ const CartDetail = () => {
   } = useCart();
   const { selectedCurrency } = useCurrency();
   const { push } = useRouter();
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   const onPlaceOrder = useCallback(
     async ({
@@ -35,24 +36,31 @@ const CartDetail = () => {
       creditCardExpirationYear,
       creditCardNumber,
     }: IFormData) => {
-      const order = await placeOrder({
-        userId,
-        email,
-        address: {
-          streetAddress,
-          state,
-          country,
-          city,
-          zipCode,
-        },
-        userCurrency: selectedCurrency,
-        creditCard: {
-          creditCardCvv,
-          creditCardExpirationMonth,
-          creditCardExpirationYear,
-          creditCardNumber,
-        },
-      });
+      setOrderError(null);
+      let order;
+      try {
+        order = await placeOrder({
+          userId,
+          email,
+          address: {
+            streetAddress,
+            state,
+            country,
+            city,
+            zipCode,
+          },
+          userCurrency: selectedCurrency,
+          creditCard: {
+            creditCardCvv,
+            creditCardExpirationMonth,
+            creditCardExpirationYear,
+            creditCardNumber,
+          },
+        });
+      } catch {
+        setOrderError('Your payment could not be processed. Please check your details and try again.');
+        return;
+      }
 
       push({
         pathname: `/cart/checkout/${order.orderId}`,
@@ -73,6 +81,9 @@ const CartDetail = () => {
         </S.Header>
         <CartItems productList={items} />
       </div>
+      {orderError && (
+        <p style={{ color: 'red', fontWeight: 'bold', marginBottom: '8px' }}>{orderError}</p>
+      )}
       <CheckoutForm onSubmit={onPlaceOrder} />
     </S.Container>
   );
