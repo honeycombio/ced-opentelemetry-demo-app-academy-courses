@@ -1,5 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
+const { trace, SpanStatusCode } = require('@opentelemetry/api');
 const cardValidator = require('simple-card-validator');
 const { v4: uuidv4 } = require('uuid');
 
@@ -18,6 +19,8 @@ function random(arr) {
 }
 
 module.exports.charge = async request => {
+  const span = trace.getActiveSpan();
+  try {
   await OpenFeature.setProviderAndWait(flagProvider);
 
   const numberVariant =  await OpenFeature.getClient().getNumberValue("paymentFailure", 0);
@@ -58,6 +61,18 @@ module.exports.charge = async request => {
 
   const { units, nanos, currencyCode } = request.amount;
   logger.info({ transactionId, cardType, lastFourDigits, amount: { units, nanos, currencyCode }, loyalty_level }, 'Transaction complete.');
-
+  span.setAttributes({
+    'app.payment.transaction.id': transactionId,
+    'app.payment.amount': parseFloat(`${units}.${nanos}`).toFixed(2),
+    'app.payment.currency': request.amount.currencyCode,
+    'app.payment.card.type': cardType,
+    'app.payment.card.last_four': lastFourDigits,
+    'app.payment.success': true,
+  });
   return { transactionId };
+  } catch (err) {
+    span?.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+    span?.setAttribute('app.payment.success', false);
+    throw err;
+  }
 };

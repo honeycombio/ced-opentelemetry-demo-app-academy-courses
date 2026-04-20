@@ -17,6 +17,17 @@
     "pino": "^10.3.1",
     "pino-opentelemetry-transport": "^3.0.0",
     "simple-card-validator": "1.1.0",
-    "uuid": "13.0.0"
+    "uuid": "13.0.0",
+    "@opentelemetry/auto-instrumentations-node": "",
+    "@opentelemetry/exporter-metrics-otlp-grpc": "",
+    "@opentelemetry/exporter-trace-otlp-grpc": "",
+    "@opentelemetry/instrumentation-runtime-node": "",
+    "@opentelemetry/resource-detector-alibaba-cloud": "",
+    "@opentelemetry/resource-detector-aws": "",
+    "@opentelemetry/resource-detector-container": "",
+    "@opentelemetry/resource-detector-gcp": "",
+    "@opentelemetry/resources": "",
+    "@opentelemetry/sdk-metrics": "",
+    "@opentelemetry/sdk-node": ""
   }
 }
