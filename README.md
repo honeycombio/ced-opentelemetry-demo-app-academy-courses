@@ -1,6 +1,6 @@
 # OpenTelemetry Telescope Shop — Honeycomb Academy Fork
 
-This is a fork of the [OpenTelemetry Demo](https://github.com/open-telemetry/opentelemetry-demo) used as the sample application for **[Honeycomb Academy](academy.honeycomb.io) courses** delivered via [Instruqt](https://instruqt.com) labs.
+This is a fork of the [OpenTelemetry Demo](https://github.com/open-telemetry/opentelemetry-demo) used as the sample application for **[Honeycomb Academy](https://academy.honeycomb.io/app) courses** delivered via [Instruqt](https://instruqt.com) labs.
 
 ## About This Fork
 
