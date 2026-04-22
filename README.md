@@ -1,36 +1,16 @@
-# OpenTelemetry Telescope Shop — O11ycon Workshop Fork
+# OpenTelemetry Telescope Shop — Honeycomb Academy Fork
 
-This is a fork of the [OpenTelemetry Demo](https://github.com/open-telemetry/opentelemetry-demo) prepared for the **O11ycon Instrumentation Workshop**, delivered by [Honeycomb](https://honeycomb.io).
+This is a fork of the [OpenTelemetry Demo](https://github.com/open-telemetry/opentelemetry-demo) used as the sample application for **Honeycomb Academy courses** delivered via [Instruqt](https://instruqt.com) labs.
 
 ## About This Fork
 
-This repository is configured for use in an Instruqt-based workshop where participants add OpenTelemetry instrumentation to a real microservice application. The application has been modified from the upstream demo as follows:
+Each Instruqt lab runs in a virtual machine with a custom image that automatically starts the application when the lab opens — learners do not need to clone or run the app themselves.
 
-- **Payment service OTel instrumentation has been intentionally removed** — participants add it back as part of the workshop exercises
-- **Honeycomb is pre-configured as the observability backend** — participants supply their own Honeycomb API key
-- **Service set is reduced** to lower memory requirements for the lab environment (accounting, fraud detection, kafka, grafana, jaeger, opensearch, prometheus, llm, and product reviews are not included)
-- **`paymentFailure` feature flag is set to 50%** — the payment service randomly fails half of all charge requests by design, giving participants real failures to investigate
+The application has been modified from the upstream demo as follows:
 
-> **Note:** The `answer-key` branch contains the completed payment service instrumentation for facilitator reference.
-
-## Quick Start
-
-```bash
-git clone https://github.com/dlsdlsdls/ced-open-telemetry-demo-o11ycon.git
-cd ced-open-telemetry-demo-o11ycon
-# Add your Honeycomb API key to .env
-docker compose up -d
-```
-
-Add your Honeycomb ingest key to `.env`:
-```
-HONEYCOMB_API_KEY=your-key-here
-```
-
-Then restart the collector to pick it up:
-```bash
-docker compose up -d otel-collector
-```
+- **Honeycomb is pre-configured as the observability backend** — the OTel Collector exports traces directly to Honeycomb; learners supply their own Honeycomb API key
+- **Service set is reduced** to lower memory requirements for the lab environment (accounting, fraud detection, grafana, jaeger, opensearch, prometheus, llm, and product catalog AI/review features are not included)
+- **`paymentFailure` feature flag is set to 50%** — the payment service randomly fails half of all charge requests by design, giving learners real failures to investigate
 
 ---
 
