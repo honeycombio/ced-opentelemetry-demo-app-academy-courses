@@ -1,26 +1,41 @@
-# OpenTelemetry Telescope Shop — Honeycomb Academy Fork
+# OpenTelemetry Telescope Shop - Honeycomb Academy Fork
 
-This is a fork of the [OpenTelemetry Demo](https://github.com/open-telemetry/opentelemetry-demo) used as the sample application for **[Honeycomb Academy](https://academy.honeycomb.io/app) courses** delivered via [Instruqt](https://instruqt.com) labs.
+This is a fork of the
+[OpenTelemetry Demo](https://github.com/open-telemetry/opentelemetry-demo) used
+as the sample application for
+**[Honeycomb Academy](https://academy.honeycomb.io/app) courses** delivered via
+[Instruqt](https://instruqt.com) labs.
 
 ## About This Fork
 
-Each Instruqt lab runs in a virtual machine with a custom image that automatically starts the application when the lab opens — learners do not need to clone or run the app themselves.
+Each Instruqt lab runs in a virtual machine with a custom image that
+automatically starts the application when the lab opens. Learners do not need
+to clone or run the app themselves.
 
 The application has been modified from the upstream demo as follows:
 
-- **Honeycomb is pre-configured as the observability backend** — the OTel Collector exports traces directly to Honeycomb; learners supply their own Honeycomb API key
-- **Service set is reduced** to lower memory requirements for the lab environment (accounting, fraud detection, grafana, jaeger, opensearch, prometheus, llm, and product catalog AI/review features are not included)
-- **`paymentFailure` feature flag is set to 50%** — the payment service randomly fails half of all charge requests by design, giving learners real failures to investigate
+- **Honeycomb is pre-configured as the observability backend**: the OTel
+  Collector exports traces and metrics directly to Honeycomb; learners supply
+  their own Honeycomb API key
+- **Service set is reduced** to lower memory requirements for the lab
+  environment (accounting, fraud detection, grafana, jaeger, opensearch,
+  prometheus, llm, and product catalog AI/review features are not included)
+- **`paymentFailure` feature flag is set to 50%**: the payment service
+  randomly fails half of all charge requests by design, giving learners real
+  failures to investigate
 
 ---
 
 ## Original Project
 
-This fork is based on the **OpenTelemetry Astronomy Shop Demo**, maintained by the OpenTelemetry community. All original credits below apply.
+This fork is based on the **OpenTelemetry Astronomy Shop Demo**, maintained by
+the OpenTelemetry community. All original credits below apply.
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?color=red)](https://github.com/open-telemetry/opentelemetry-demo/blob/main/LICENSE)
 
-The OpenTelemetry Astronomy Shop is a microservice-based distributed system intended to illustrate the implementation of OpenTelemetry in a near real-world environment.
+The OpenTelemetry Astronomy Shop is a microservice-based distributed system
+intended to illustrate the implementation of OpenTelemetry in a near
+real-world environment.
 
 - [Upstream repository](https://github.com/open-telemetry/opentelemetry-demo)
 - [Demo documentation](https://opentelemetry.io/docs/demo/)
@@ -28,7 +43,7 @@ The OpenTelemetry Astronomy Shop is a microservice-based distributed system inte
 
 ## Demos Featuring the Astronomy Shop
 
-| | | |
+|                           |                |                                  |
 |---------------------------|----------------|----------------------------------|
 | [AlibabaCloud LogService] | [Grafana Labs] | [Sentry]                         |
 | [Apache Doris]            | [Guance]       | [ServiceNow Cloud Observability] |
