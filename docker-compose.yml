@@ -688,7 +688,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 200M
+          # Raised from 200M: exporting metrics to Honeycomb as well as traces
+          # left the collector at ~82% of the old limit, above the
+          # memory_limiter threshold where it starts refusing data.
+          memory: 400M
     restart: unless-stopped
     command: [ "--config=/etc/otelcol-config.yml", "--config=/etc/otelcol-config-extras.yml" ]
     user: 0:0
