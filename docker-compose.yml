@@ -614,8 +614,6 @@ services:
     volumes:
       - ./src/flagd:/app/data
 
-
-
   # Postgresql used by Accounting service
   postgresql:
     image: ${POSTGRES_IMAGE}
@@ -714,5 +712,3 @@ services:
       - POSTGRES_PASSWORD
       - HONEYCOMB_API_KEY
       - GOMEMLIMIT=160MiB
-
-

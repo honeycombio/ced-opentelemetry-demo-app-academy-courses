@@ -3,10 +3,19 @@
 
 # extra settings to be merged into OpenTelemetry Collector configuration
 # do not delete this file
+#
+# Maps are deep-merged into otelcol-config.yml; lists (such as pipeline
+# receivers/processors/exporters) replace the base value entirely.
 
 ## Send traces to Honeycomb
 ## Note: the spanmetrics exporter must be included in the exporters array
 ## if overriding the traces pipeline.
+
+## Send metrics to Honeycomb
+## Honeycomb routes all OTLP metrics to the managed `Metrics` dataset
+## automatically, so no x-honeycomb-dataset header is needed.
+## The receivers below are trimmed to a curated set of high-value metrics
+## so learners see a clean Metrics dataset.
 
 exporters:
   otlp/honeycomb:
@@ -14,7 +23,260 @@ exporters:
     headers:
       "x-honeycomb-team": "${HONEYCOMB_API_KEY}"
 
+receivers:
+  # Replaces the base `hostmetrics` receiver in the metrics pipeline. Drops the
+  # disk, paging, processes, process (per-process), and system scrapers.
+  hostmetrics/honeycomb:
+    root_path: /hostfs
+    scrapers:
+      cpu:
+        metrics:
+          system.cpu.time:
+            enabled: false
+          system.cpu.utilization:
+            enabled: true
+          system.cpu.logical.count:
+            enabled: true
+      load:
+      disk:
+        metrics:
+          system.disk.io_time:
+            enabled: false
+          system.disk.operation_time:
+            enabled: false
+          system.disk.pending_operations:
+            enabled: false
+          system.disk.merged:
+            enabled: false
+          system.disk.weighted_io_time:
+            enabled: false
+      memory:
+        metrics:
+          system.memory.utilization:
+            enabled: true
+          system.memory.limit:
+            enabled: true
+      filesystem:
+        metrics:
+          system.filesystem.inodes.usage:
+            enabled: false
+          system.filesystem.utilization:
+            enabled: true
+        exclude_mount_points:
+          mount_points:
+            - /dev/*
+            - /proc/*
+            - /sys/*
+            - /run/k3s/containerd/*
+            - /var/lib/docker/*
+            - /var/lib/kubelet/*
+            - /snap/*
+          match_type: regexp
+        exclude_fs_types:
+          fs_types:
+            - autofs
+            - binfmt_misc
+            - bpf
+            - cgroup2
+            - configfs
+            - debugfs
+            - devpts
+            - devtmpfs
+            - fusectl
+            - hugetlbfs
+            - iso9660
+            - mqueue
+            - nsfs
+            - overlay
+            - proc
+            - procfs
+            - pstore
+            - rpc_pipefs
+            - securityfs
+            - selinuxfs
+            - squashfs
+            - sysfs
+            - tracefs
+          match_type: strict
+      network:
+        metrics:
+          system.network.packets:
+            enabled: false
+          system.network.dropped:
+            enabled: false
+          system.network.connections:
+            enabled: false
+
+  # Per-container CPU, memory, network, and restarts.
+  # The default 5s timeout is too short to stat ~20 containers, which cancels
+  # the scrape context and drops every container metric for that cycle.
+  docker_stats:
+    collection_interval: 30s
+    timeout: 25s
+    metrics:
+      container.restarts:
+        enabled: true
+      container.blockio.io_service_bytes_recursive:
+        enabled: false
+      container.cpu.usage.kernelmode:
+        enabled: false
+      container.cpu.usage.usermode:
+        enabled: false
+      container.cpu.usage.total:
+        enabled: false
+      container.memory.file:
+        enabled: false
+      container.memory.total_cache:
+        enabled: false
+      container.network.io.usage.rx_dropped:
+        enabled: false
+      container.network.io.usage.tx_dropped:
+        enabled: false
+
+  # Keeps connections, commits/rollbacks, size, deadlocks, and the block/tuple
+  # counters enabled in the base config
+  postgresql:
+    metrics:
+      postgresql.blocks_read:
+        enabled: false
+      postgresql.operations:
+        enabled: false
+      postgresql.rows:
+        enabled: false
+      postgresql.database.count:
+        enabled: false
+      postgresql.table.count:
+        enabled: false
+      postgresql.table.size:
+        enabled: false
+      postgresql.table.vacuum.count:
+        enabled: false
+      postgresql.index.scans:
+        enabled: false
+      postgresql.index.size:
+        enabled: false
+      postgresql.bgwriter.buffers.allocated:
+        enabled: false
+      postgresql.bgwriter.buffers.writes:
+        enabled: false
+      postgresql.bgwriter.checkpoint.count:
+        enabled: false
+      postgresql.bgwriter.duration:
+        enabled: false
+      postgresql.bgwriter.maxwritten:
+        enabled: false
+      postgresql.replication.data_delay:
+        enabled: false
+      postgresql.wal.age:
+        enabled: false
+      postgresql.wal.lag:
+        enabled: false
+
+  # Keeps clients, commands, keyspace hits/misses, keys, memory, and network I/O
+  redis:
+    metrics:
+      redis.clients.blocked:
+        enabled: false
+      redis.clients.max_input_buffer:
+        enabled: false
+      redis.clients.max_output_buffer:
+        enabled: false
+      redis.commands:
+        enabled: false
+      redis.connections.received:
+        enabled: false
+      redis.connections.rejected:
+        enabled: false
+      redis.cpu.time:
+        enabled: false
+      redis.db.avg_ttl:
+        enabled: false
+      redis.db.expires:
+        enabled: false
+      redis.latest_fork:
+        enabled: false
+      redis.memory.fragmentation_ratio:
+        enabled: false
+      redis.memory.lua:
+        enabled: false
+      redis.memory.peak:
+        enabled: false
+      redis.memory.rss:
+        enabled: false
+      redis.rdb.changes_since_last_save:
+        enabled: false
+      redis.replication.backlog_first_byte_offset:
+        enabled: false
+      redis.replication.offset:
+        enabled: false
+      redis.slaves.connected:
+        enabled: false
+      redis.uptime:
+        enabled: false
+
+processors:
+  # Batches metric exports. Without this, every scrape becomes its own gRPC
+  # request to Honeycomb, which drove the collector to ~82% of its memory limit.
+  batch/honeycomb_metrics:
+    send_batch_size: 1000
+    send_batch_max_size: 1500
+    timeout: 5s
+
+  # Drops metrics that add noise to the Metrics dataset without teaching
+  # anything. Each condition below drops matching metrics; everything else is
+  # kept, so newly added metrics show up rather than silently disappearing.
+  filter/honeycomb_metrics:
+    error_mode: ignore
+    metrics:
+      metric:
+        # Telemetry pipeline internals: the collector's own metrics, SDK span
+        # and log processor queues, and exporter counters
+        - IsMatch(name, "^otelcol[._]")
+        - IsMatch(name, "^otel\\.(trace|logs)\\.")
+        - IsMatch(name, "^otlp\\.exporter\\.")
+        - name == "processedSpans" or name == "processedLogs" or name == "queueSize"
+
+        # Language runtime internals. These differ per language, so they make
+        # poor cross-service examples: JVM, .NET, V8/Node, CPython, and Go.
+        - IsMatch(name, "^(jvm|dotnet|aspnetcore|kestrel|v8js|nodejs|cpython|go)\\.")
+        - IsMatch(name, "^process\\.runtime\\.")
+        - IsMatch(name, "^db\\.sql\\.connection\\.")
+        - name == "process.context_switches"
+
+        # Host metrics emitted by the Python SDKs in load-generator and
+        # recommendation. They share metric names with the collector's
+        # hostmetrics receiver but measure a single container, so leaving them
+        # in mixes host-level and container-level series under one name.
+        # hostmetrics resources carry no service.name, so this keeps those.
+        - IsMatch(name, "^system\\.") and resource.attributes["service.name"] != nil
+
+        # Deprecated names that duplicate a current metric.
+        # Deliberately NOT dropping http.server.duration or rpc.server.duration:
+        # services here run different SDK versions, so those are the only
+        # latency histogram for frontend, shipping, product-catalog, checkout,
+        # and ad. Note their unit is milliseconds, while the newer
+        # http.server.request.duration is seconds, so do not aggregate the two
+        # together. Use traces.span.metrics.duration for cross-service latency.
+        - name == "process.open_file_descriptor.count"
+        - name == "system.network.connections"
+
+        # Message size and per-RPC message count histograms. Latency
+        # histograms are the useful distribution example, and these crowd them
+        # out. Careful: must not match http.server.request.duration.
+        - IsMatch(name, "\\.(request|response)\\.(body\\.)?size$")
+        - IsMatch(name, "_per_rpc$")
+
+        # Kafka JMX internals. Keeps broker health metrics such as
+        # kafka.message.count, kafka.request.count/failed, kafka.lag.max,
+        # kafka.network.io, and the partition gauges.
+        - IsMatch(name, "^kafka\\.(consumer|producer|logs|purgatory|isr|controller|leaderElection)\\.")
+        - IsMatch(name, "^kafka\\.request\\.(queue|time)")
+
 service:
   pipelines:
     traces:
       exporters: [spanmetrics, otlp/honeycomb]
+    metrics:
+      receivers: [docker_stats, httpcheck/frontend-proxy, hostmetrics/honeycomb, nginx, otlp, postgresql, redis, spanmetrics]
+      processors: [resourcedetection, memory_limiter, filter/honeycomb_metrics, batch/honeycomb_metrics]
+      exporters: [debug, otlp/honeycomb]
